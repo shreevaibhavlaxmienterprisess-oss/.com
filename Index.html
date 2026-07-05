@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Vaibhav Laxmi Premium Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #dc3545; --success: #28a745; --warning: #fd7e14; --info: #0d6efd; --purple: #6f42c1; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Arial, sans-serif; padding: 10px; }
+        .app-container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding-bottom: 20px; }
+        
+        .brand-header { text-align: center; padding: 20px; border-bottom: 2px solid #eee; }
+        .brand-header h1 { color: var(--primary); font-weight: 800; font-size: 26px; margin: 0; }
+
+        .custom-card { border: 1px solid #eee; border-radius: 10px; margin: 15px; padding: 15px; background: #fff; }
+        .section-title { font-weight: bold; margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; }
+
+        .worker-mgmt-header { background: #f1f3f5; padding: 10px; font-weight: bold; border-left: 5px solid var(--info); margin-bottom: 10px; }
+        .worker-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; }
+
+        .worker-input-row { display: flex; gap: 8px; align-items: center; background: #eef7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #cfe2ff; }
+        
+        .record-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .record-table th { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: 700; }
+        .record-table td { border: 1px solid #dee2e6; padding: 10px; vertical-align: top; }
+        
+        .direct-img { width: 100%; max-width: 180px; height: auto; display: block; margin-top: 10px; border: 2px solid #eee; border-radius: 6px; }
+        .worker-report-tag { background: #f0f0f0; border-left: 3px solid var(--info); padding: 4px 8px; border-radius: 4px; display: block; margin-bottom: 5px; font-size: 12px; }
+
+        .bill-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 15px; }
+        .bill-box { background: white; width: 100%; max-width: 400px; padding: 25px; border: 2px solid #000; border-radius: 4px; position: relative; }
+        .bill-line { border-bottom: 1px solid #000; margin: 10px 0; }
+
+        @media print {
+            .no-print { display: none !important; }
+            #printArea { display: block !important; }
+            .print-premium-box { border: 3px solid #000 !important; padding: 20px !important; margin: 10px !important; }
+            .print-table { width: 100% !important; border-collapse: collapse !important; border: 2px solid #000 !important; }
+            .print-table th, .print-table td { border: 1px solid #000 !important; padding: 10px !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container no-print">
+    <div class="brand-header"><h1>Shree Vaibhav Laxmi Enterprises</h1></div>
+
+    <div class="custom-card">
+        <div class="worker-mgmt-header">Worker Management</div>
+        <input type="text" id="wName" class="form-control mb-2" placeholder="Worker Name">
+        <div class="row g-2 mb-2">
+            <div class="col-6">
+                <select id="wType" class="form-select">
+                    <option value="Mistri">Mistri</option>
+                    <option value="Helper" selected>Helper</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <input type="number" id="wRate" class="form-control" placeholder="Daily Rate ₹">
+            </div>
+        </div>
+        <button class="btn btn-success w-100 fw-bold" onclick="addWorker()">Add Worker</button>
+        <div id="workerDisplayList" class="mt-3"></div>
+    </div>
+
+    <div class="custom-card">
+        <div class="section-title text-success">1. Daily Work Entry</div>
+        <input type="date" id="workDate" class="form-control mb-2">
+        <input type="text" id="siteName" class="form-control mb-2" placeholder="Site Name">
+        
+        <div class="p-2 border rounded bg-light mb-2">
+            <label class="small fw-bold">Worker Hajari:</label>
+            <div id="attendanceList"></div>
+        </div>
+        
+        <div class="row g-2 mb-2">
+            <div class="col-6"><textarea id="mIn" class="form-control" placeholder="Maal Aaya (IN)" rows="2"></textarea></div>
+            <div class="col-6"><textarea id="mOut" class="form-control" placeholder="Maal Laga (OUT)" rows="2"></textarea></div>
+        </div>
+        <textarea id="workDesc" class="form-control mb-2" placeholder="Kaam ki details..." rows="2"></textarea>
+        
+        <label class="small fw-bold">Photo:</label>
+        <input type="file" id="imgInput" class="form-control mb-2" accept="image/*" onchange="previewFile(this)">
+        <img id="imgPrev" style="width:100%; display:none; margin-bottom:10px; border-radius:8px;">
+        
+        <button class="btn btn-success w-100 fw-bold py-2" onclick="saveRecord()">Save Record</button>
+    </div>
+
+    <div class="custom-card">
+        <div class="section-title text-warning">2. Payment Entry (Cash)</div>
+        <select id="payWSelect" class="form-select mb-2"></select>
+        <div class="row g-2 mb-2">
+            <div class="col-6"><input type="date" id="payDate" class="form-control"></div>
+            <div class="col-6"><input type="number" id="payAmt" class="form-control" placeholder="Amount ₹"></div>
+        </div>
+        <button class="btn btn-warning text-white w-100 fw-bold" onclick="saveCash()">Save Payment</button>
+    </div>
+
+    <div class="custom-card">
+        <div class="section-title text-purple" style="color: var(--purple);">3. Generate Hisab</div>
+        <select id="hisabSelect" class="form-select mb-2"></select>
+        <button class="btn btn-purple text-white w-100 fw-bold" style="background:var(--purple)" onclick="showStatement()">Generate Bill</button>
+    </div>
+
+    <div class="custom-card">
+        <h6 class="fw-bold mb-3">Saved Records History</h6>
+        <div class="table-responsive">
+            <table class="record-table">
+                <thead>
+                    <tr>
+                        <th>Date/Site</th>
+                        <th>Work & Material</th>
+                        <th>Worker Hisab</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsTbody"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-danger btn-sm w-100 mt-4" onclick="clearAllData()">RESET ALL DATA (Format)</button>
+    </div>
+</div>
+
+<div id="billModal" class="bill-overlay">
+    <div class="bill-box" id="billContent">
+        <div id="billPrintArea">
+            <h4 class="text-center fw-bold">SHREE VAIBHAV LAXMI ENT.</h4>
+            <p class="text-center mb-1" id="stmtName">Statement: -</p>
+            <div class="bill-line"></div>
+            <div class="d-flex justify-content-between mb-1"><span>Total Work Days:</span> <b id="stmtWorkDays">0</b></div>
+            <div class="d-flex justify-content-between mb-1"><span>Total Hajri:</span> <b id="stmtHajri">0</b></div>
+            <div class="d-flex justify-content-between mb-1 text-success"><span>Total Kamayi:</span> <b id="stmtEarnings">₹0</b></div>
+            <div class="d-flex justify-content-between mb-1 text-danger"><span>(-) Daily Advance:</span> <b id="stmtAdv">₹0</b></div>
+            <div class="d-flex justify-content-between mb-1 text-danger"><span>(-) Cash Given:</span> <b id="stmtCash">₹0</b></div>
+            <div class="bill-line"></div>
+            <h4 class="text-center fw-bold text-danger mt-2" id="stmtBal">BAKI (Balance): ₹0</h4>
+        </div>
+        <div class="mt-4 d-flex gap-2 no-print">
+            <button class="btn btn-primary w-100 fw-bold" onclick="window.print()">Print</button>
+            <button class="btn btn-danger w-100 fw-bold" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="printArea" style="display:none;"></div>
+
+<script>
+    let workers = JSON.parse(localStorage.getItem('svl_workers')) || [];
+    let records = JSON.parse(localStorage.getItem('svl_records')) || [];
+    let currentImg = "";
+
+    window.onload = () => { 
+        document.getElementById('workDate').valueAsDate = new Date();
+        document.getElementById('payDate').valueAsDate = new Date();
+        renderUI(); 
+    };
+
+    function addWorker() {
+        const name = document.getElementById('wName').value;
+        const rate = document.getElementById('wRate').value;
+        if(!name || !rate) return alert("Please enter Name and Rate");
+        workers.push({ id: Date.now(), name, type: document.getElementById('wType').value, rate: parseFloat(rate) });
+        saveData(); renderUI();
+        document.getElementById('wName').value = ""; document.getElementById('wRate').value = "";
+    }
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { 
+                currentImg = e.target.result; 
+                document.getElementById('imgPrev').src = currentImg;
+                document.getElementById('imgPrev').style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function saveRecord() {
+        const site = document.getElementById('siteName').value;
+        if(!site) return alert("Site Name is required!");
+        
+        let dayW = [];
+        document.querySelectorAll('.worker-input-row').forEach(row => {
+            const h = parseFloat(row.querySelector('.h-val').value) || 0;
+            const a = parseFloat(row.querySelector('.a-val').value) || 0;
+            if(h > 0 || a > 0) dayW.push({ id: parseInt(row.dataset.id), h, a });
+        });
+        
+        records.push({
+            id: Date.now(),
+            type: 'WORK',
+            date: document.getElementById('workDate').value,
+            site,
+            desc: document.getElementById('workDesc').value,
+            in: document.getElementById('mIn').value,
+            out: document.getElementById('mOut').value,
+            img: currentImg,
+            workers: dayW
+        });
+        
+        currentImg = ""; 
+        document.getElementById('imgPrev').style.display = 'none';
+        document.getElementById('siteName').value = "";
+        document.getElementById('workDesc').value = "";
+        saveData(); renderUI(); alert("Saved Successfully!");
+    }
+
+    function saveCash() {
+        const wid = document.getElementById('payWSelect').value;
+        const amt = document.getElementById('payAmt').value;
+        if(!wid || !amt) return alert("Select Worker and Amount");
+        records.push({ id: Date.now(), type: 'PAY', date: document.getElementById('payDate').value, workerId: parseInt(wid), amt: parseFloat(amt) });
+        saveData(); renderUI(); alert("Payment Recorded!");
+    }
+
+    function renderUI() {
+        const wList = document.getElementById('workerDisplayList');
+        const dZone = document.getElementById('attendanceList');
+        const payS = document.getElementById('payWSelect');
+        const hisS = document.getElementById('hisabSelect');
+        const tbody = document.getElementById('recordsTbody');
+        
+        wList.innerHTML = ""; dZone.innerHTML = "";
+        payS.innerHTML = hisS.innerHTML = `<option value="">Select Worker...</option>`;
+        
+        if(workers.length === 0) dZone.innerHTML = "<small class='text-muted'>Add workers first.</small>";
+
+        workers.forEach(w => {
+            wList.innerHTML += `<div class="worker-item"><span><b>${w.name}</b> (${w.type}) - ₹${w.rate}</span><button class="btn btn-sm btn-danger py-0" onclick="delWorker(${w.id})">X</button></div>`;
+            dZone.innerHTML += `<div class="worker-input-row" data-id="${w.id}"><span>${w.name}</span><input type="number" step="0.5" class="form-control form-control-sm h-val" placeholder="Hajri" style="width:70px"><input type="number" class="form-control form-control-sm a-val" placeholder="Adv" style="width:70px"></div>`;
+            payS.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+            hisS.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+        });
+
+        tbody.innerHTML = "";
+        records.slice().reverse().forEach(r => {
+            if(r.type === 'WORK') {
+                let wInfo = "";
+                let totalDayMoney = 0;
+                r.workers.forEach(rw => {
+                    const winfo = workers.find(x => x.id === rw.id);
+                    if(winfo) {
+                        const wages = rw.h * winfo.rate;
+                        totalDayMoney += wages;
+                        wInfo += `<span class="worker-report-tag">${winfo.name} (${rw.h}) - ₹${wages}</span>`;
+                    }
+                });
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.date}<br><b>${r.site}</b></td>
+                        <td>
+                            <b>In:</b> ${r.in}<br><b>Out:</b> ${r.out}<br>
+                            ${r.img ? `<img src="${r.img}" class="direct-img">` : ''}
+                        </td>
+                        <td>${wInfo}<hr class="my-1"><b>Total: ₹${totalDayMoney}</b></td>
+                        <td>
+                            <button class="btn btn-info btn-sm text-white mb-1" onclick="printEntry(${r.id})">PDF</button>
+                            <button class="btn btn-danger btn-sm" onclick="delRec(${r.id})">X</button>
+                        </td>
+                    </tr>`;
+            } else {
+                const w = workers.find(x => x.id === r.workerId);
+                tbody.innerHTML += `<tr class="table-warning"><td>${r.date}</td><td colspan="2"><b>CASH PAYMENT:</b> ₹${r.amt} to ${w?w.name:'-'}</td><td><button class="btn btn-sm btn-danger" onclick="delRec(${r.id})">X</button></td></tr>`;
+            }
+        });
+    }
+
+    function printEntry(id) {
+        const r = records.find(x => x.id === id);
+        let wList = "";
+        let total = 0;
+        r.workers.forEach(rw => {
+            const winfo = workers.find(x => x.id === rw.id);
+            const amt = rw.h * winfo.rate;
+            total += amt;
+            wList += `<tr><td>${winfo.name}</td><td>${rw.h}</td><td>₹${winfo.rate}</td><td>₹${amt}</td></tr>`;
+        });
+
+        const printHtml = `
+            <div class="print-premium-box">
+                <h2 style="text-align:center; margin-bottom:5px;">SHREE VAIBHAV LAXMI ENT.</h2>
+                <p style="text-align:center;">Daily Work Report</p>
+                <hr>
+                <p><b>Date:</b> ${r.date} | <b>Site:</b> ${r.site}</p>
+                <p><b>Work Details:</b> ${r.desc}</p>
+                <p><b>Material IN:</b> ${r.in} | <b>OUT:</b> ${r.out}</p>
+                <table class="print-table">
+                    <thead><tr><th>Worker Name</th><th>Hajri</th><th>Rate</th><th>Total</th></tr></thead>
+                    <tbody>${wList}</tbody>
+                    <tfoot><tr><th colspan="3">Total Day Wages</th><th>₹${total}</th></tr></tfoot>
+                </table>
+                <br>
+                ${r.img ? `<p><b>Site Photo:</b></p><img src="${r.img}" style="width:300px; border:1px solid #000;">` : ''}
+                <div style="margin-top:40px; display:flex; justify-content:space-between;">
+                    <span>_________________<br>Worker Sign</span>
+                    <span>_________________<br>Authorized Sign</span>
+                </div>
+            </div>`;
+        document.getElementById('printArea').innerHTML = printHtml;
+        window.print();
+    }
+
+    function showStatement() {
+        const wid = parseInt(document.getElementById('hisabSelect').value);
+        if(!wid) return alert("Select a worker!");
+        const w = workers.find(x => x.id === wid);
+        
+        let totalWorkDays = 0; // Kitne din kaam par aaya
+        let totalHajri = 0;    // Kul kitni hajri hui
+        let totalEarnings = 0; // Kul kamayi
+        let totalAdv = 0;      // Rozana ka advance
+        let totalCash = 0;     // Alag se diya gaya cash
+
+        records.forEach(r => {
+            if(r.type === 'WORK') {
+                const f = r.workers.find(idx => idx.id === wid);
+                if(f) { 
+                    totalWorkDays++; 
+                    totalHajri += f.h; 
+                    totalEarnings += (f.h * w.rate); 
+                    totalAdv += f.a; 
+                }
+            } else if(r.type === 'PAY' && r.workerId === wid) { 
+                totalCash += r.amt; 
+            }
+        });
+
+        document.getElementById('stmtName').innerText = `Statement: ${w.name}`;
+        document.getElementById('stmtWorkDays').innerText = totalWorkDays;
+        document.getElementById('stmtHajri').innerText = totalHajri;
+        document.getElementById('stmtEarnings').innerText = `₹${totalEarnings}`;
+        document.getElementById('stmtAdv').innerText = `₹${totalAdv}`;
+        document.getElementById('stmtCash').innerText = `₹${totalCash}`;
+        document.getElementById('stmtBal').innerText = `BAKI (Balance): ₹${totalEarnings - totalAdv - totalCash}`;
+        document.getElementById('billModal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('billModal').style.display = 'none'; }
+    function saveData() { localStorage.setItem('svl_workers', JSON.stringify(workers)); localStorage.setItem('svl_records', JSON.stringify(records)); }
+    function delWorker(id) { workers = workers.filter(x => x.id !== id); saveData(); renderUI(); }
+    function delRec(id) { if(confirm("Delete record?")) { records = records.filter(x => x.id !== id); saveData(); renderUI(); } }
+    function clearAllData() { if(confirm("Danger! This will delete ALL records and workers. Continue?")) { localStorage.clear(); location.reload(); } }
+</script>
+</body>
+</html>
