@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Management Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <nav class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-users-gear"></i> श्रमिक पोर्टल
+            </h1>
+            <div class="flex gap-4">
+                <button onclick="showSection('home')" class="hover:bg-blue-700 px-3 py-1.5 rounded-lg transition text-sm font-medium">होम</button>
+                <button onclick="openAddWorkerModal()" class="bg-white text-blue-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition text-sm font-semibold shadow">+ नया वर्कर</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        
+        <div id="filterSection" class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-400"></i>
+                <input type="text" id="searchInput" onkeyup="filterWorkers()" placeholder="वर्कर का नाम या स्किल खोजें..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+            
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <button onclick="filterCategory('all')" id="btn-all" class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">सभी</button>
+                <button onclick="filterCategory('Plumber')" id="btn-Plumber" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition">प्लंबर</button>
+                <button onclick="filterCategory('Electrician')" id="btn-Electrician" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition">इलेक्ट्रीशियन</button>
+                <button onclick="filterCategory('Carpenter')" id="btn-Carpenter" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition">कारपेंटर</button>
+            </div>
+        </div>
+
+        <div id="workersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </main>
+
+    <div id="addWorkerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">नया वर्कर जोड़ें</h3>
+                <button onclick="closeAddWorkerModal()" class="text-gray-500 text-xl font-bold">&times;</button>
+            </div>
+            <form id="addWorkerForm" onsubmit="saveNewWorker(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">पूरा नाम</label>
+                    <input type="text" id="newWorkerName" required class="w-full border p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">स्किल / केटेगरी</label>
+                    <select id="newWorkerSkill" class="w-full border p-2 rounded-lg text-sm">
+                        <option value="Plumber">Plumber (प्लंबर)</option>
+                        <option value="Electrician">Electrician (इलेक्ट्रीशियन)</option>
+                        <option value="Carpenter">Carpenter (कारपेंटर)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">अनुभव (जैसे: 3 साल)</label>
+                    <input type="text" id="newWorkerExp" required class="w-full border p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">मोबाइल नंबर</label>
+                    <input type="text" id="newWorkerPhone" required class="w-full border p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">दैनिक हाजरी / रेट (₹)</label>
+                    <input type="number" id="newWorkerRate" required class="w-full border p-2 rounded-lg text-sm" placeholder="जैसे: 500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">प्रोफाइल फोटो (गैलरी/कैमरा से चुनें)</label>
+                    <input type="file" id="newWorkerPhoto" accept="image/*" capture="environment" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeAddWorkerModal()" class="w-1/2 border p-2 rounded-lg text-sm text-gray-700">रद्द करें</button>
+                    <button type="submit" class="w-1/2 bg-blue-600 text-white p-2 rounded-lg text-sm font-medium">सुरक्षित करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="workerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl my-8">
+            
+            <div id="pdfPrintArea" class="p-6">
+                <div class="bg-blue-600 -m-6 p-6 text-white relative mb-6">
+                    <button onclick="closeModal()" class="absolute top-4 right-4 text-white text-xl bg-black/20 hover:bg-black/40 w-8 h-8 rounded-full flex items-center justify-center transition shadow-inside" data-html2pdf-ignore>&times;</button>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                        <img id="modalImg" src="" alt="Profile" class="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md bg-gray-200">
+                        <div>
+                            <h3 id="modalName" class="text-2xl font-bold"></h3>
+                            <p id="modalSkill" class="text-blue-100 font-semibold text-sm mt-1"></p>
+                            <p class="text-xs text-blue-200 mt-1"><i class="fa-solid fa-phone"></i> <span id="modalPhone"></span> | अनुभव: <span id="modalExp"></span> | रेटिंग: <span id="modalRating"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 pt-4 border-t border-gray-100" data-html2pdf-ignore>
+                    <div class="bg-gray-50 p-3 rounded-xl border">
+                        <h4 class="font-bold text-xs text-blue-700 uppercase mb-2"><i class="fa-solid fa-calendar-check"></i> आज की हाजिरी दर्ज करें</h4>
+                        <div class="flex gap-2">
+                            <button onclick="addAttendanceRecord('Present')" class="bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-medium w-full hover:bg-green-700">Present (उपस्थित)</button>
+                            <button onclick="addAttendanceRecord('Absent')" class="bg-red-600 text-white text-xs px-3 py-2 rounded-lg font-medium w-full hover:bg-red-700">Absent (अनुपस्थित)</button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-xl border">
+                        <h4 class="font-bold text-xs text-blue-700 uppercase mb-2"><i class="fa-solid fa-trowel-bricks"></i> आज कौन सा काम पूरा हुआ?</h4>
+                        <div class="flex gap-1">
+                            <input type="text" id="workDoneInput" placeholder="उदा: दीवार प्लास्टर पूरा" class="border p-1.5 text-xs rounded-lg w-full bg-white">
+                            <button onclick="saveWorkDone()" class="bg-blue-600 text-white px-2 py-1 rounded-lg text-xs"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-xl border">
+                        <h4 class="font-bold text-xs text-blue-700 uppercase mb-2"><i class="fa-solid fa-truck-ramp-box"></i> मटेरियल इन / आउट ट्रैक</h4>
+                        <div class="space-y-1">
+                            <input type="text" id="materialNameInput" placeholder="मटीरियल का नाम (उदा: सीमेंट)" class="border p-1.5 text-xs rounded-lg w-full bg-white mb-1">
+                            <div class="flex gap-1">
+                                <button onclick="saveMaterial('IN')" class="bg-teal-600 text-white px-2 py-1.5 rounded-lg text-xs w-full font-medium">IN (आया)</button>
+                                <button onclick="saveMaterial('OUT')" class="bg-orange-600 text-white px-2 py-1.5 rounded-lg text-xs w-full font-medium">OUT (गया)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-6" data-html2pdf-ignore>
+                    <h4 class="font-bold text-sm text-yellow-800 mb-2"><i class="fa-solid fa-hand-holding-dollar"></i> एडवांस पैसा / भुगतान एंट्री जोड़ें</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="number" id="advanceAmount" placeholder="राशि (₹)" class="border p-2 text-xs rounded-lg bg-white">
+                        <input type="text" id="advanceReason" placeholder="कारण / विवरण (क्यों लिया)" class="border p-2 text-xs rounded-lg bg-white">
+                        <button onclick="saveAdvancePayment()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold p-2 rounded-lg text-xs">डेटा सेव करें</button>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="text-base font-bold text-gray-900 mb-3 border-b pb-1 flex justify-between items-center">
+                        <span><i class="fa-solid fa-file-invoice"></i> कम्पलीट स्टेटमेंट व बिलिंग समरी</span>
+                        <span id="billingSummaryBadge" class="text-sm bg-blue-100 text-blue-800 px-3 py-0.5 rounded-full"></span>
+                    </h4>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 bg-gray-50 p-3 rounded-lg border text-center">
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold uppercase">कुल वर्किंग दिन</p>
+                            <p id="calcTotalDays" class="text-lg font-bold text-gray-900">0</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold uppercase">कुल हजारी बनी</p>
+                            <p id="calcTotalHajary" class="text-lg font-bold text-green-700">₹0</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold uppercase">कुल एडवांस लिया</p>
+                            <p id="calcTotalAdvance" class="text-lg font-bold text-red-600">₹0</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold uppercase">नेट देय राशि</p>
+                            <p id="calcNetPayable" class="text-lg font-bold text-blue-700">₹0</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-100 border-b border-gray-200">
+                                    <th class="p-2 font-bold text-gray-700">तारीख</th>
+                                    <th class="p-2 font-bold text-gray-700">हाजिरी</th>
+                                    <th class="p-2 font-bold text-gray-700">पूरा हुआ कार्य</th>
+                                    <th class="p-2 font-bold text-gray-700">मटेरियल विवरण</th>
+                                    <th class="p-2 font-bold text-gray-700">एडवांस / विवरण</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerTableBody" class="divide-y divide-gray-100 bg-white">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div> <div class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100">
+                <button onclick="closeModal()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-100 transition">बंद करें</button>
+                <button onclick="downloadAsPDF()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition inline-flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-pdf"></i> PDF रिपोर्ट डाउनलोड करें</button>
+                <a id="modalCall" href="#" class="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-green-700 transition inline-flex items-center gap-2 shadow-sm"><i class="fa-solid fa-phone"></i> सीधे कॉल करें</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. वर्कर का डेटाबेस (अटेंडेंस, एडवांस, वर्क डन और मटेरियल के नए एरे के साथ)
+        const workers = [
+            { 
+                id: 1, 
+                name: "राजेश कुमार", 
+                skill: "Plumber", 
+                exp: "5 साल", 
+                rating: "4.8 ★", 
+                phone: "+91 98765 43210", 
+                dailyRate: 600,
+                img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=60",
+                history: [
+                    { date: "2026-07-01", status: "Present", workDone: "बाथरूम पाइप फिटिंग कम्प्लीट", material: "कंसील्ड वाल्व IN", advance: 0, reason: "" },
+                    { date: "2026-07-02", status: "Present", workDone: "वाशबेसिन इंस्टॉलेशन", material: "नल और सिंक पाइप IN", advance: 500, reason: "घर के राशन के लिए" },
+                    { date: "2026-07-03", status: "Present", workDone: "लीकेज मरम्मत का काम", material: "ग्लू स्टिक OUT", advance: 0, reason: "" }
+                ]
+            },
+            { 
+                id: 2, 
+                name: "अमित शर्मा", 
+                skill: "Electrician", 
+                exp: "3 साल", 
+                rating: "4.5 ★", 
+                phone: "+91 87654 32109", 
+                dailyRate: 550,
+                img: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=60",
+                history: [
+                    { date: "2026-07-01", status: "Present", workDone: "मेन बोर्ड वायरिंग", material: "वायर बंडल IN", advance: 0, reason: "" },
+                    { date: "2026-07-02", status: "Absent", workDone: "कोई नहीं", material: "कोई नहीं", advance: 1000, reason: "तबीयत खराब / दवा" }
+                ]
+            },
+            { 
+                id: 3, 
+                name: "विक्रम सिंह", 
+                skill: "Carpenter", 
+                exp: "8 साल", 
+                rating: "4.9 ★", 
+                phone: "+91 76543 21098", 
+                dailyRate: 700,
+                img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=60",
+                history: []
+            },
+            { 
+                id: 4, 
+                name: "सुनील यादव", 
+                skill: "Plumber", 
+                exp: "4 साल", 
+                rating: "4.2 ★", 
+                phone: "+91 65432 10987", 
+                dailyRate: 500,
+                img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60",
+                history: []
+            },
+            { 
+                id: 5, 
+                name: "संजय वर्मा", 
+                skill: "Electrician", 
+                exp: "6 साल", 
+                rating: "4.7 ★", 
+                phone: "+91 95551 23456", 
+                dailyRate: 600,
+                img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=60",
+                history: []
+            }
+        ];
+
+        let currentCategory = 'all';
+        let activeWorkerId = null;
+
+        // 2. कार्ड्स को स्क्रीन पर दिखाने का फंक्शन
+        function displayWorkers(data) {
+            const grid = document.getElementById('workersGrid');
+            grid.innerHTML = '';
+            
+            if(data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 font-medium">कोई वर्कर नहीं मिला।</div>`;
+                return;
+            }
+
+            data.forEach(worker => {
+                const card = `
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-300 flex flex-col justify-between">
+                        <div class="p-5 flex items-start gap-4">
+                            <img src="${worker.img}" alt="${worker.name}" class="w-16 h-16 rounded-full object-cover bg-gray-100 border flex-shrink-0">
+                            <div>
+                                <h2 class="text-base font-bold text-gray-900">${worker.name}</h2>
+                                <span class="inline-block text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full mt-1">${worker.skill}</span>
+                                <div class="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                                    <span><i class="fa-solid fa-briefcase text-gray-400 mr-1"></i> ${worker.exp}</span>
+                                    <span class="text-amber-500 font-medium"><i class="fa-solid fa-star mr-1"></i> ${worker.rating}</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1.5 font-medium bg-gray-100 inline-block px-2 py-0.5 rounded">
+                                   दिहाड़ी: ₹${worker.dailyRate || 500}/दिन
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex gap-2">
+                            <button onclick="viewProfile(${worker.id})" class="w-full bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 py-2 rounded-lg text-xs font-semibold transition shadow-sm"><i class="fa-solid fa-clipboard-user text-blue-600 mr-1"></i> हाजिरी व बिलिंग देखें</button>
+                            <a href="tel:${worker.phone}" class="bg-green-600 hover:bg-green-700 text-white p-2 px-3 rounded-lg text-xs transition flex items-center justify-center shadow-sm" title="कॉल करें"><i class="fa-solid fa-phone"></i></a>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        // 3. लाइव सर्च बार फ़िल्टर (Real-time Search)
+        function filterWorkers() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = workers.filter(worker => {
+                const matchesSearch = worker.name.toLowerCase().includes(searchValue) || 
+                                      worker.skill.toLowerCase().includes(searchValue);
+                const matchesCategory = currentCategory === 'all' || worker.skill === currentCategory;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            displayWorkers(filtered);
+        }
+
+        // 4. केटेगरी बटन फ़िल्टर (Category Buttons)
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${category}`);
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+            
+            filterWorkers();
+        }
+
+        // 5. न्यू वर्कर फॉर्म ओपन/क्लोज लॉजिक
+        function openAddWorkerModal() {
+            document.getElementById('addWorkerModal').classList.remove('hidden');
+        }
+        function closeAddWorkerModal() {
+            document.getElementById('addWorkerModal').classList.add('hidden');
+            document.getElementById('addWorkerForm').reset();
+        }
+
+        // 6. कैमरा/गैलरी से इमेज कनवर्टर और नए लेबर को सुरक्षित करना
+        function saveNewWorker(e) {
+            e.preventDefault();
+            const name = document.getElementById('newWorkerName').value;
+            const skill = document.getElementById('newWorkerSkill').value;
+            const exp = document.getElementById('newWorkerExp').value;
+            const phone = document.getElementById('newWorkerPhone').value;
+            const dailyRate = parseInt(document.getElementById('newWorkerRate').value) || 500;
+            const photoInput = document.getElementById('newWorkerPhoto');
+
+            let defaultImg = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400";
+
+            const createRecord = (imgUrl) => {
+                const newId = workers.length + 1;
+                workers.push({
+                    id: newId,
+                    name: name,
+                    skill: skill,
+                    exp: exp,
+                    rating: "5.0 ★",
+                    phone: phone,
+                    dailyRate: dailyRate,
+                    img: imgUrl,
+                    history: []
+                });
+                displayWorkers(workers);
+                closeAddWorkerModal();
+                alert("नया वर्कर सफलतापूर्वक जोड़ दिया गया है!");
+            };
+
+            // अगर यूजर ने कैमरा या गैलरी से फोटो चुनी है तो उसे Base64 में बदलें
+            if(photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    createRecord(event.target.result);
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                createRecord(defaultImg);
+            }
+        }
+
+        // 7. प्रोफाइल और कंप्लीट लेजर (Billing/Attendance) दिखाना
+        function viewProfile(id) {
+            activeWorkerId = id;
+            const worker = workers.find(w => w.id === id);
+            if(!worker) return;
+
+            document.getElementById('modalImg').src = worker.img;
+            document.getElementById('modalName').innerText = worker.name;
+            document.getElementById('modalSkill').innerText = worker.skill;
+            document.getElementById('modalExp').innerText = worker.exp;
+            document.getElementById('modalRating').innerText = worker.rating;
+            document.getElementById('modalPhone').innerText = worker.phone;
+            document.getElementById('modalCall').href = `tel:${worker.phone}`;
+            document.getElementById('billingSummaryBadge').innerText = `रेट: ₹${worker.dailyRate || 500}/दिन`;
+
+            renderLedgerTable(worker);
+
+            const modal = document.getElementById('workerModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 50);
+        }
+
+        // 8. लेजर कैलकुलेशन और टेबल जेनरेट करना
+        function renderLedgerTable(worker) {
+            const tbody = document.getElementById('ledgerTableBody');
+            tbody.innerHTML = '';
+
+            let totalPresentDays = 0;
+            let totalAdvance = 0;
+
+            if(!worker.history || worker.history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">इस वर्कर का अभी तक कोई रिकॉर्ड दर्ज नहीं है।</td></tr>`;
+            } else {
+                worker.history.forEach(row => {
+                    if(row.status === 'Present') totalPresentDays++;
+                    totalAdvance += parseInt(row.advance || 0);
+
+                    const tr = `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-2 font-medium text-gray-600">${row.date}</td>
+                            <td class="p-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${row.status}</span>
+                            </td>
+                            <td class="p-2 text-gray-700">${row.workDone || '-'}</td>
+                            <td class="p-2 text-gray-700">${row.material || '-'}</td>
+                            <td class="p-2">
+                                ${row.advance > 0 ? `<span class="text-red-600 font-bold">₹${row.advance}</span> <span class="text-gray-400">(${row.reason})</span>` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += tr;
+                });
+            }
+
+            // फाइनेंशियल गणनाएँ
+            const rate = worker.dailyRate || 500;
+            const totalHajary = totalPresentDays * rate;
+            const netPayable = totalHajary - totalAdvance;
+
+            document.getElementById('calcTotalDays').innerText = totalPresentDays;
+            document.getElementById('calcTotalHajary').innerText = `₹${totalHajary}`;
+            document.getElementById('calcTotalAdvance').innerText = `₹${totalAdvance}`;
+            document.getElementById('calcNetPayable').innerText = `₹${netPayable}`;
+        }
+
+        // आज की तारीख प्राप्त करने का हेल्पर फंक्शन (YYYY-MM-DD)
+        function getTodayDate() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+
+        // नया रिकॉर्ड जोड़ने या आज की तारीख के रिकॉर्ड को खोजने की उपयोगिता
+        function getOrCreateTodayRecord(worker) {
+            const todayStr = getTodayDate();
+            if(!worker.history) worker.history = [];
+            let todayRecord = worker.history.find(h => h.date === todayStr);
+            
+            if(!todayRecord) {
+                todayRecord = { date: todayStr, status: '-', workDone: '-', material: '-', advance: 0, reason: '' };
+                worker.history.push(todayRecord);
+            }
+            return todayRecord;
+        }
+
+        // 9. आज की हाजिरी (Present/Absent) जोड़ना
+        function addAttendanceRecord(status) {
+            const worker = workers.find(w => w.id === activeWorkerId);
+            if(!worker) return;
+
+            const record = getOrCreateTodayRecord(worker);
+            record.status = status;
+            
+            renderLedgerTable(worker);
+            alert(`आज की हाजिरी ${status} अंकित कर दी गई है।`);
+        }
+
+        // 10. आज का पूरा हुआ काम सेव करना
+        function saveWorkDone() {
+            const input = document.getElementById('workDoneInput');
+            if(!input.value.trim()) return alert("कृपया काम का विवरण लिखें");
+
+            const worker = workers.find(w => w.id === activeWorkerId);
+            const record = getOrCreateTodayRecord(worker);
+            record.workDone = input.value.trim();
+            
+            input.value = '';
+            renderLedgerTable(worker);
+            alert("काम का विवरण सुरक्षित हो गया है!");
+        }
+
+        // 11. मटेरियल इन/आउट डेटा सेव करना
+        function saveMaterial(type) {
+            const input = document.getElementById('materialNameInput');
+            if(!input.value.trim()) return alert("कृपया मटेरियल का नाम दर्ज करें");
+
+            const worker = workers.find(w => w.id === activeWorkerId);
+            const record = getOrCreateTodayRecord(worker);
+            record.material = `${input.value.trim()} (${type})`;
+            
+            input.value = '';
+            renderLedgerTable(worker);
+            alert(`मटेरियल ${type} एंट्री दर्ज हो गई है!`);
+        }
+
+        // 12. एडवांस पेमेंट और कारण दर्ज करना
+        function saveAdvancePayment() {
+            const amtInput = document.getElementById('advanceAmount');
+            const reasonInput = document.getElementById('advanceReason');
+
+            const amt = parseInt(amtInput.value);
+            if(!amt || amt <= 0) return alert("कृपया मान्य एडवांस राशि भरें");
+
+            const worker = workers.find(w => w.id === activeWorkerId);
+            const record = getOrCreateTodayRecord(worker);
+            
+            record.advance = (parseInt(record.advance) || 0) + amt;
+            record.reason = reasonInput.value.trim() ? reasonInput.value.trim() : "एडवांस लिया";
+
+            amtInput.value = '';
+            reasonInput.value = '';
+            renderLedgerTable(worker);
+            alert("एडवांस राशि विवरण के साथ सफलतापूर्वक जुड़ गई है!");
+        }
+
+        // 13. PDF वर्किंग फंक्शनलिटी (html2pdf.js का उपयोग करके)
+        function downloadAsPDF() {
+            const worker = workers.find(w => w.id === activeWorkerId);
+            const element = document.getElementById('pdfPrintArea');
+            
+            const options = {
+                margin:       10,
+                filename:     `${worker ? worker.name : 'Worker'}_Statement_Report.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // पीडीएफ डाउनलोड ट्रिगर करें
+            html2pdf().set(options).from(element).save();
+        }
+
+        // 14. मॉडल और नेविगेशन क्लोज लॉजिक
+        function closeModal() {
+            const modal = document.getElementById('workerModal');
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+            activeWorkerId = null;
+        }
+
+        function showSection(section) {
+            if(section === 'home') {
+                document.getElementById('searchInput').value = '';
+                filterCategory('all');
+            }
+        }
+
+        // शुरुआती रेंडरिंग
+        document.addEventListener('DOMContentLoaded', () => {
+            displayWorkers(workers);
+        });
+    </script>
+</body>
+</html>
