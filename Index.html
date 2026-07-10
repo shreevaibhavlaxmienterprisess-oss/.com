@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHREE VAIBHAVLAXMI ENTERPRISES - Tracking System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea *, #printAttendanceLogArea, #printAttendanceLogArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+            #printAttendanceLogArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 transition-colors duration-200" id="bodyTag">
+
+    <div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-[#1e293b] z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96 max-w-[90%] text-center">
+            <h2 class="text-2xl font-bold text-[#1a2e40] mb-1">Security Authentication</h2>
+            <p class="text-sm text-gray-500 mb-6">Shree Vaibhav Laxmi Enterprises</p>
+            <input type="password" id="passwordInput" placeholder="Enter System Password" class="w-full border p-3 rounded-md mb-4 text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="checkLogin()" class="w-full bg-[#1a2e40] text-white p-3 rounded-md font-bold hover:bg-opacity-90 transition">Access Dashboard</button>
+            <p id="loginError" class="text-red-500 text-sm mt-3 hidden">Incorrect Password! Please try again.</p>
+        </div>
+    </div>
+
+    <div id="appScreen" class="hidden min-h-screen pb-12">
+        
+        <header class="bg-[#1a2e40] text-white text-center py-6 px-4 relative shadow-md">
+            <button onclick="toggleDarkMode()" class="absolute top-4 left-4 bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded text-white">🌙 Dark Mode</button>
+            <button onclick="logout()" class="absolute top-4 right-4 bg-red-800 hover:bg-red-700 text-xs px-3 py-1.5 rounded text-white font-bold">Logout</button>
+            <h1 class="text-2xl md:text-4xl font-black tracking-wide">SHREE VAIBHAVLAXMI ENTERPRISES</h1>
+            <p class="text-yellow-400 text-xs md:text-sm font-bold tracking-widest mt-1">MUMBAI | SHUTTERING & CONSTRUCTION MANAGEMENT</p>
+        </header>
+
+        <div class="max-w-6xl mx-auto mt-6 px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Total Workers</p>
+                <p id="metricWorkers" class="text-2xl font-black text-gray-800">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Today's Attendance</p>
+                <p id="metricAttendance" class="text-2xl font-black text-gray-800">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500">
+                <p class="text-xs text-gray-500 uppercase font-bold">Total Advance Given</p>
+                <p id="metricAdvance" class="text-2xl font-black text-gray-800">₹0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-600">
+                <p class="text-xs text-gray-500 uppercase font-bold">Pending Payment</p>
+                <p id="metricPending" class="text-2xl font-black text-gray-800">₹0</p>
+            </div>
+        </div>
+
+        <main class="max-w-6xl mx-auto mt-6 px-4 space-y-6">
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">1. Worker Registration (नया वर्कर जोड़ें)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Worker Name</label>
+                        <input type="text" id="wName" class="w-full border p-2 rounded" placeholder="Enter name">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Worker Type</label>
+                        <select id="wType" class="w-full border p-2 rounded">
+                            <option>Shuttering Carpenter</option>
+                            <option>Mistri</option>
+                            <option>Helper</option>
+                            <option>Supervisor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Mobile Number</label>
+                        <input type="text" id="wMobile" class="w-full border p-2 rounded" placeholder="Mobile number daalein">
+                    </div>
+                </div>
+                <button onclick="addWorker()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition">Add Worker</button>
+                
+                <h4 class="font-bold text-sm mt-6 mb-2">Registered Workers List:</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Name</th>
+                                <th class="p-2">Type</th>
+                                <th class="p-2">Mobile</th>
+                                <th class="p-2 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workerTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">2. Attendance & Material Daily Log</h3>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold mb-1">Select Date for Log</label>
+                    <input type="date" id="attDate" class="border p-2 rounded">
+                </div>
+                
+                <div class="border p-4 rounded bg-gray-50 mb-4">
+                    <h4 class="font-bold text-sm text-[#1a2e40] mb-3">A. Sabhi Workers Ki Hajari</h4>
+                    <div id="attendanceContainer" class="space-y-3 max-h-60 overflow-y-auto pr-2"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="border p-4 rounded bg-amber-50/50">
+                        <h4 class="font-bold text-sm text-amber-800 mb-2">B. Material In/Out Status</h4>
+                        <input type="text" id="materialStatus" placeholder="Koun sa material aaya ya gaya..." class="w-full border p-2 bg-white rounded text-xs mb-2">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">📸 Upload Material Image:</label>
+                        <input type="file" id="materialImageInput" accept="image/*" onchange="previewAndSaveImage(this, 'materialImgPreview')" class="w-full text-xs">
+                        <div class="mt-2 text-center">
+                            <img id="materialImgPreview" class="max-h-24 mx-auto rounded shadow-sm border hidden" src="" alt="Material Preview">
+                        </div>
+                    </div>
+                    <div class="border p-4 rounded bg-emerald-50/50">
+                        <h4 class="font-bold text-sm text-emerald-800 mb-2">C. Kaam Kya Kya Hua Status</h4>
+                        <input type="text" id="workStatus" placeholder="Aaj kya kya kaam complete hua site par..." class="w-full border p-2 bg-white rounded text-xs mb-2">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">📸 Upload Work Image:</label>
+                        <input type="file" id="workImageInput" accept="image/*" onchange="previewAndSaveImage(this, 'workImgPreview')" class="w-full text-xs">
+                        <div class="mt-2 text-center">
+                            <img id="workImgPreview" class="max-h-24 mx-auto rounded shadow-sm border hidden" src="" alt="Work Preview">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="saveAttendance()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow transition">💾 Save Complete Daily Log</button>
+                    <button onclick="printDailyLog()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition">🖨️ Download Daily Log PDF</button>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">3. Worker Advance Record</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Select Worker</label>
+                        <select id="advWorkerSelect" class="w-full border p-2 rounded"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Advance Amount (₹)</label>
+                        <input type="number" id="advAmount" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Date</label>
+                        <input type="date" id="advDate" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Reason (Kyu liya)</label>
+                        <input type="text" id="advReason" class="w-full border p-2 rounded" placeholder="Reason">
+                    </div>
+                </div>
+                <button onclick="saveAdvance()" class="mt-4 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-6 rounded shadow transition">Save Advance</button>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">4. Worker Settlement Bill</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Select Worker for Bill</label>
+                        <select id="billWorkerSelect" onchange="generateBill()" class="w-full border p-2 rounded"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">From Date (Kab se)</label>
+                        <input type="date" id="billFromDate" onchange="generateBill()" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">To Date (Kab tak)</label>
+                        <input type="date" id="billToDate" onchange="generateBill()" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Per Day Rate (₹)</label>
+                        <input type="number" id="billRate" value="400" oninput="generateBill()" class="w-full border p-2 rounded">
+                    </div>
+                </div>
+
+                <div id="printArea" class="border p-6 rounded bg-white max-w-2xl mx-auto shadow-sm text-sm text-gray-800">
+                    <div class="text-center border-b pb-4 mb-4">
+                        <h2 class="text-2xl font-black tracking-wide text-[#1a2e40]">SHREE VAIBHAVLAXMI ENTERPRISES</h2>
+                        <p class="text-xs text-gray-500">Mumbai | Shuttering Contractor | Worker Statement Bill</p>
+                        <div class="flex justify-between text-xs mt-3 px-2">
+                            <span><strong>Bill No:</strong> <span id="invNo">SVLE-1001</span></span>
+                            <span><strong>Date:</strong> <span id="invDate">--/--/----</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 bg-gray-50 p-3 rounded text-xs space-y-1">
+                        <p><strong>Worker Name:</strong> <span id="invWorkerName">-</span></p>
+                        <p><strong>Designation:</strong> <span id="invWorkerType">-</span></p>
+                        <p><strong>Mobile:</strong> <span id="invWorkerMobile">-</span></p>
+                        <p><strong>Bill Period:</strong> <span id="invPeriod" class="font-bold text-blue-900">All Time</span></p>
+                    </div>
+
+                    <table class="w-full border text-xs mb-4 text-center">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2 border-r">Total Days Logged</th>
+                                <th class="p-2 border-r">Total Hajari</th>
+                                <th class="p-2 border-r">Rate / Day</th>
+                                <th class="p-2">Gross Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td id="invDays" class="p-2 border-r">0</td>
+                                <td id="invHajari" class="p-2 border-r">0</td>
+                                <td id="invRate" class="p-2 border-r">₹0</td>
+                                <td id="invGross" class="p-2 font-bold">₹0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="font-bold text-xs mb-1 text-red-700">Advance Deductions History:</p>
+                    <table class="w-full border text-xs mb-4">
+                        <thead>
+                            <tr class="bg-red-50 text-red-900 border-b">
+                                <th class="p-1 border-r text-left pl-2">Date</th>
+                                <th class="p-1 border-r text-left pl-2">Reason</th>
+                                <th class="p-1 text-right pr-2">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invAdvanceRows">
+                            <tr><td colspan="3" class="text-center text-gray-400 p-2">No advance taken</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-between items-center bg-emerald-50 border p-3 rounded font-bold text-emerald-900 mb-6">
+                        <span>NET PAYABLE AMOUNT:</span>
+                        <span id="invNet" class="text-lg">₹0</span>
+                    </div>
+
+                    <div class="flex justify-between items-end mt-12 pt-4 px-4 text-center text-xs">
+                        <div>
+                            <div class="w-24 h-24 mx-auto border-2 border-blue-400 border-dashed rounded-full flex items-center justify-center text-[10px] text-blue-500 font-bold uppercase rotate-12">
+                                <div class="text-center">
+                                    <p class="text-[8px]">SHREE VAIBHAVLAXMI</p>
+                                    <p class="border-y my-0.5 font-black">OFFICIAL STAMP</p>
+                                    <p class="text-[7px]">ENTERPRISES MUMBAI</p>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-gray-500 font-bold">Company Stamp</p>
+                        </div>
+                        <div>
+                            <p class="underline font-serif italic text-gray-700">NITIN C PATEL</p>
+                            <p class="mt-8 border-t pt-1 text-gray-500 font-bold">CONSTRUCTOR Signature</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button onclick="printBillOnly()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-8 rounded shadow transition">🖨️ Download / Print Settlement Bill PDF</button>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">5. Daily Work Log History View</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border border-collapse" id="printAttendanceLogArea">
+                        <thead>
+                            <tr class="bg-[#1a2e40] text-white">
+                                <th class="p-3 border border-gray-300">Date</th>
+                                <th class="p-3 border border-gray-300">Worker Details & Hajari</th>
+                                <th class="p-3 border border-gray-300">Material In/Out Status & Image</th>
+                                <th class="p-3 border border-gray-300">Work Complete Status & Image</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="text-gray-700">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-400">No logs saved yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold border-b pb-2 mb-4 text-[#1a2e40]">6. System Logs & Global History Controls</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <button onclick="exportCSV()" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 rounded text-xs shadow">Export All Data to CSV</button>
+                    <button onclick="backupJSON()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded text-xs shadow">Backup JSON Database</button>
+                    <div>
+                        <input type="file" id="restoreFile" onchange="restoreJSON(event)" class="hidden">
+                        <button onclick="document.getElementById('restoreFile').click()" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 rounded text-xs shadow">Restore JSON Backup</button>
+                    </div>
+                </div>
+                <div class="text-center text-xs text-red-600 font-bold mt-4">
+                    <button onclick="clearSystem()" class="underline hover:text-red-800">⚠️ Clear All System LocalStorage Data</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        let isPrintingBill = true;
+        let currentMaterialBase64 = "";
+        let currentWorkBase64 = "";
+
+        // LocalStorage Core DB initialization
+        let DB = JSON.parse(localStorage.getItem('SVLE_DB')) || {
+            workers: [],
+            attendance: {}, // key: "YYYY-MM-DD"
+            advance: []     // elements: {id, workerId, date, amount, reason}
+        };
+
+        function saveDB() {
+            localStorage.setItem('SVLE_DB', JSON.stringify(DB));
+            updateMetrics();
+            renderHistoryTable();
+        }
+
+        // Image Preview Handler and Conversion
+        function previewAndSaveImage(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgElement = document.getElementById(previewId);
+                    imgElement.src = e.target.result;
+                    imgElement.classList.remove('hidden');
+                    if (previewId === 'materialImgPreview') {
+                        currentMaterialBase64 = e.target.result;
+                    } else if (previewId === 'workImgPreview') {
+                        currentWorkBase64 = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Auth
+        function checkLogin() {
+            const pass = document.getElementById('passwordInput').value;
+            if(pass === "Nirmal@116") {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                initApp();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        // (Other core functions like logout, toggleDarkMode, initApp, addWorker, deleteWorker, etc. remain perfectly operational below...)
+        function logout() {
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            const body = document.getElementById('bodyTag');
+            body.classList.toggle('bg-gray-900');
+            body.classList.toggle('text-white');
+        }
+
+        function initApp() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('attDate').value = todayStr;
+            document.getElementById('advDate').value = todayStr;
+            document.getElementById('invDate').innerText = new Date().toLocaleDateString('en-IN');
+            
+            renderWorkers();
+            renderAttendanceList();
+            populateWorkerDropdowns();
+            updateMetrics();
+            renderHistoryTable();
+        }
+
+        function updateMetrics() {
+            document.getElementById('metricWorkers').innerText = DB.workers.length;
+            const todayStr = document.getElementById('attDate').value;
+            const todayLogs = DB.attendance[todayStr] ? DB.attendance[todayStr].logs.length : 0;
+            document.getElementById('metricAttendance').innerText = todayLogs;
+            let totalAdv = DB.advance.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            document.getElementById('metricAdvance').innerText = '₹' + totalAdv;
+            document.getElementById('metricPending').innerText = '₹' + (DB.workers.length * 12000 - totalAdv);
+        }
+
+        function addWorker() {
+            const name = document.getElementById('wName').value.trim();
+            const type = document.getElementById('wType').value;
+            const mob = document.getElementById('wMobile').value.trim();
+            if(!name) return alert("Worker Name zaroori hai!");
+            const newWorker = { id: 'W-' + Date.now(), name: name, type: type, mobile: mob || 'No Mobile' };
+            DB.workers.push(newWorker);
+            saveDB();
+            renderWorkers();
+            populateWorkerDropdowns();
+            renderAttendanceList();
+            document.getElementById('wName').value = '';
+            document.getElementById('wMobile').value = '';
+        }
+
+        function deleteWorker(id) {
+            if(confirm("Kya aap is worker ko system se delete karna chahte hain?")) {
+                DB.workers = DB.workers.filter(w => w.id !== id);
+                saveDB();
+                renderWorkers();
+                populateWorkerDropdowns();
+                renderAttendanceList();
+            }
+        }
+
+        function renderWorkers() {
+            const tbody = document.getElementById('workerTableBody');
+            tbody.innerHTML = '';
+            if(DB.workers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No Workers Registered Yet.</td></tr>`;
+                return;
+            }
+            DB.workers.forEach(w => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 text-gray-700">
+                        <td class="p-2 font-bold">${w.name}</td>
+                        <td class="p-2">${w.type}</td>
+                        <td class="p-2">${w.mobile}</td>
+                        <td class="p-2 text-center"><button onclick="deleteWorker('${w.id}')" class="text-red-600 hover:underline font-bold">Delete</button></td>
+                    </tr>`;
+            });
+        }
+
+        function populateWorkerDropdowns() {
+            const advSel = document.getElementById('advWorkerSelect');
+            const billSel = document.getElementById('billWorkerSelect');
+            let options = '<option value="">-- Select Worker --</option>';
+            DB.workers.forEach(w => { options += `<option value="${w.id}">${w.name} (${w.type})</option>`; });
+            advSel.innerHTML = options;
+            billSel.innerHTML = options;
+        }
+
+        document.getElementById('attDate').addEventListener('change', renderAttendanceList);
+
+        function renderAttendanceList() {
+            const container = document.getElementById('attendanceContainer');
+            container.innerHTML = '';
+            const dateStr = document.getElementById('attDate').value;
+            if(DB.workers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 text-center">Pehle workers add karein.</p>`;
+                return;
+            }
+            const savedDayData = DB.attendance[dateStr] || { logs: [], material: '', work: '', materialImg: '', workImg: '' };
+            document.getElementById('materialStatus').value = savedDayData.material || '';
+            document.getElementById('workStatus').value = savedDayData.work || '';
+            
+            const matPrev = document.getElementById('materialImgPreview');
+            if (savedDayData.materialImg) {
+                matPrev.src = savedDayData.materialImg; matPrev.classList.remove('hidden'); currentMaterialBase64 = savedDayData.materialImg;
+            } else { matPrev.src = ""; matPrev.classList.add('hidden'); currentMaterialBase64 = ""; }
+
+            const workPrev = document.getElementById('workImgPreview');
+            if (savedDayData.workImg) {
+                workPrev.src = savedDayData.workImg; workPrev.classList.remove('hidden'); currentWorkBase64 = savedDayData.workImg;
+            } else { workPrev.src = ""; workPrev.classList.add('hidden'); currentWorkBase64 = ""; }
+
+            document.getElementById('materialImageInput').value = "";
+            document.getElementById('workImageInput').value = "";
+
+            DB.workers.forEach(w => {
+                const existingLog = savedDayData.logs.find(l => l.workerId === w.id) || { remark: '', hajari: '1' };
+                container.innerHTML += `
+                    <div class="flex flex-wrap items-center justify-between bg-white p-2 border rounded shadow-sm gap-2 text-xs text-gray-700">
+                        <div><p class="font-bold text-gray-900">${w.name}</p><p class="text-[10px] text-gray-500">${w.type}</p></div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" placeholder="Remark" value="${existingLog.remark}" data-remark-id="${w.id}" class="border p-1 rounded text-xs w-40">
+                            <select data-hajari-id="${w.id}" class="border p-1 rounded font-bold bg-gray-50 text-gray-900">
+                                <option value="0" ${existingLog.hajari == '0' ? 'selected':''}>0 (Absent)</option>
+                                <option value="0.5" ${existingLog.hajari == '0.5' ? 'selected':''}>0.5 (Half)</option>
+                                <option value="1" ${existingLog.hajari == '1' ? 'selected':''}>1 (Full Day)</option>
+                                <option value="1.5" ${existingLog.hajari == '1.5' ? 'selected':''}>1.5 (OT)</option>
+                                <option value="2" ${existingLog.hajari == '2' ? 'selected':''}>2 (Double)</option>
+                            </select>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function saveAttendance() {
+            const dateStr = document.getElementById('attDate').value;
+            if(!dateStr) return alert("Date verify karein!");
+            const logs = [];
+            DB.workers.forEach(w => {
+                const hajariSelect = document.querySelector(`[data-hajari-id="${w.id}"]`);
+                const remarkInput = document.querySelector(`[data-remark-id="${w.id}"]`);
+                if(hajariSelect) { logs.push({ workerId: w.id, hajari: parseFloat(hajariSelect.value), remark: remarkInput.value.trim() }); }
+            });
+            DB.attendance[dateStr] = { logs: logs, material: document.getElementById('materialStatus').value.trim(), work: document.getElementById('workStatus').value.trim(), materialImg: currentMaterialBase64, workImg: currentWorkBase64 };
+            saveDB();
+            alert(`🎉 Date ${dateStr} ka Complete Record safe save ho chuka hai!`);
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            const dates = Object.keys(DB.attendance).sort((a,b) => new Date(b) - new Date(a));
+            if(dates.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No logs saved yet.</td></tr>`; return;
+            }
+            dates.forEach(dateStr => {
+                const data = DB.attendance[dateStr];
+                let workerDetailsHTML = '<div class="space-y-1">';
+                data.logs.forEach(log => {
+                    const worker = DB.workers.find(w => w.id === log.workerId);
+                    const workerName = worker ? worker.name : "Unknown";
+                    workerDetailsHTML += `<div><strong>${workerName}</strong>: <span class="bg-gray-100 px-1 rounded">${log.hajari} Hajari</span></div>`;
+                });
+                workerDetailsHTML += '</div>';
+                const materialImgHTML = data.materialImg ? `<br><img src="${data.materialImg}" class="max-h-16 mt-2 rounded border">` : '';
+                const workImgHTML = data.workImg ? `<br><img src="${data.workImg}" class="max-h-16 mt-2 rounded border">` : '';
+                tbody.innerHTML += `
+                    <tr class="border hover:bg-gray-50">
+                        <td class="p-3 font-bold border text-blue-900">${dateStr}</td>
+                        <td class="p-3 border">${workerDetailsHTML}</td>
+                        <td class="p-3 border bg-amber-50/20">${data.material || '-'}${materialImgHTML}</td>
+                        <td class="p-3 border bg-emerald-50/20">${data.work || '-'}${workImgHTML}</td>
+                    </tr>`;
+            });
+        }
+
+        function printDailyLog() {
+            isPrintingBill = false;
+            const style = document.createElement('style');
+            style.innerHTML = `@media print { #printArea { display:none !important; } #printAttendanceLogArea { display:table !important; } }`;
+            document.head.appendChild(style); window.print();
+        }
+
+        function printBillOnly() {
+            isPrintingBill = true;
+            const style = document.createElement('style');
+            style.innerHTML = `@media print { #printAttendanceLogArea { display:none !important; } #printArea { display:block !important; } }`;
+            document.head.appendChild(style); window.print();
+        }
+
+        function saveAdvance() {
+            const wId = document.getElementById('advWorkerSelect').value;
+            const amount = parseFloat(document.getElementById('advAmount').value);
+            const date = document.getElementById('advDate').value;
+            const reason = document.getElementById('advReason').value.trim();
+            if(!wId || !amount || !date) return alert("Poori jaankari bharein!");
+            DB.advance.push({ id: 'A-' + Date.now(), workerId: wId, amount: amount, date: date, reason: reason || 'Advance Pay' });
+            saveDB(); alert("Advance Entry Saved!");
+            document.getElementById('advAmount').value = ''; document.getElementById('advReason').value = '';
+            generateBill();
+        }
+
+        function generateBill() {
+            const wId = document.getElementById('billWorkerSelect').value;
+            const perDayRate = parseFloat(document.getElementById('billRate').value) || 0;
+            const fromDateStr = document.getElementById('billFromDate').value;
+            const toDateStr = document.getElementById('billToDate').value;
+
+            if(!wId) {
+                document.getElementById('invWorkerName').innerText = '-'; document.getElementById('invWorkerType').innerText = '-';
+                document.getElementById('invWorkerMobile').innerText = '-'; document.getElementById('invPeriod').innerText = 'All Time';
+                document.getElementById('invDays').innerText = '0'; document.getElementById('invHajari').innerText = '0';
+                document.getElementById('invRate').innerText = '₹0'; document.getElementById('invGross').innerText = '₹0';
+                document.getElementById('invAdvanceRows').innerHTML = `<tr><td colspan="3" class="text-center p-2 text-gray-400">No advance taken</td></tr>`;
+                document.getElementById('invNet').innerText = '₹0'; return;
+            }
+
+            const worker = DB.workers.find(w => w.id === wId);
+            document.getElementById('invWorkerName').innerText = worker.name;
+            document.getElementById('invWorkerType').innerText = worker.type;
+            document.getElementById('invWorkerMobile').innerText = worker.mobile;
+            document.getElementById('invPeriod').innerText = (fromDateStr && toDateStr) ? `${fromDateStr} se ${toDateStr}` : 'All Time';
+
+            let totalDaysLogged = 0, totalHajariScore = 0;
+            Object.keys(DB.attendance).forEach(dateKey => {
+                if (fromDateStr && dateKey < fromDateStr) return;
+                if (toDateStr && dateKey > toDateStr) return;
+                const dayLog = DB.attendance[dateKey].logs.find(l => l.workerId === wId);
+                if(dayLog) { totalDaysLogged++; totalHajariScore += dayLog.hajari; }
+            });
+
+            const grossEarnings = totalHajariScore * perDayRate;
+            let totalAdvanceDeduction = 0, advTableHTML = '';
+            const workerAdvances = DB.advance.filter(a => {
+                if (a.workerId !== wId) return false;
+                if (fromDateStr && a.date < fromDateStr) return false;
+                if (toDateStr && a.date > toDateStr) return false;
+                return true;
+            });
+
+            if(workerAdvances.length === 0) { advTableHTML = `<tr><td colspan="3" class="text-center p-2 text-gray-400">No advance records found</td></tr>`; }
+            else {
+                workerAdvances.forEach(a => {
+                    totalAdvanceDeduction += parseFloat(a.amount);
+                    advTableHTML += `<tr class="border-b"><td class="p-1 pl-2">${a.date}</td><td class="p-1">${a.reason}</td><td class="p-1 text-right pr-2 text-red-600">- ₹${a.amount}</td></tr>`;
+                });
+            }
+
+            const netPayable = grossEarnings - totalAdvanceDeduction;
+            document.getElementById('invDays').innerText = totalDaysLogged;
+            document.getElementById('invHajari').innerText = totalHajariScore;
+            document.getElementById('invRate').innerText = '₹' + perDayRate;
+            document.getElementById('invGross').innerText = '₹' + grossEarnings;
+            document.getElementById('invAdvanceRows').innerHTML = advTableHTML;
+            document.getElementById('invNet').innerText = '₹' + netPayable;
+            document.getElementById('invNo').innerText = "SVLE-" + (1000 + Math.abs(wId.hashCode() % 5000));
+        }
+
+        String.prototype.hashCode = function() {
+            var hash = 0, i, chr; if (this.length === 0) return hash;
+            for (i = 0; i < this.length; i++) { chr = this.charCodeAt(i); hash = ((hash << 5) - hash) + chr; hash |= 0; } return hash;
+        };
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Category,Details,Amount/Weight\\n";
+            DB.workers.forEach(w => { csvContent += `Worker,${w.name} (${w.type}),${w.mobile}\\n`; });
+            DB.advance.forEach(a => { csvContent += `Advance,Date:${a.date} Reason:${a.reason},₹${a.amount}\\n`; });
+            const encodedUri = encodeURI(csvContent); const link = document.createElement("a");
+            link.setAttribute("href", encodedUri); link.setAttribute("download", "SVLE_Backup_Report.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function backupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB));
+            const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "SHREE_VAIBHAVLAXMI_DATABASE.json");
+            document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
+        }
+
+        function restoreJSON(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if(parsed.workers && parsed.attendance && parsed.advance) { DB = parsed; saveDB(); initApp(); alert("Database restored!"); }
+                    else { alert("Invalid file format!"); }
+                } catch(err) { alert("Error reading file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearSystem() {
+            if(confirm("Danger Zone! Clear all data?")) { localStorage.removeItem('SVLE_DB'); DB = { workers: [], attendance: {}, advance: [] }; saveDB(); initApp(); }
+        }
+    </script>
+</body>
+</html>
