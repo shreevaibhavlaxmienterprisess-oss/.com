@@ -238,15 +238,60 @@
                             <div class="flex justify-between items-end mt-3 pt-1 px-1 text-center text-xs">
     <div></div>
 
-    <div class="flex flex-col items-center">
-        <div id="official-stamp-box" onclick="toggleStamp()" class="relative w-32 h-32 rounded-full border-[3px] border-blue-900 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 opacity-20 filter grayscale scale-95" style="color: #0b4596; border-color: #0b4596; font-family: 'Arial', sans-serif; transform: rotate(-8deg);">
-            
-            <div class="absolute inset-0 p-1">
-                <svg viewBox="0 0 100 100" class="w-full h-full ref-svg">
-                    <path id="curvePath" d="M 12,50 A 38,38 0 1,1 88,50" fill="none" />
-                    <text class="font-bold fill-[#0b4596]" style="font-size: 9.4px; letter-spacing: 3.2px;">
-                        <textPath href="#curvePath" startOffset="50%" text-anchor="middle">SHREE VAIBHAVLAXMI ENTERPRISES</textPath>
-                    </text>
+   <style>
+.stamp{
+position:absolute;
+width:120px;
+height:120px;
+border:4px solid #0038A8;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+font:bold 16px Arial;
+color:#0038A8;
+background:#fff;
+cursor:move;
+}
+.stamp div{line-height:1.2;}
+</style>
+
+<button onclick="stampMode=!stampMode">
+🖋 Stamp Mode
+</button>
+
+<script>
+let stampMode=false;
+
+document.addEventListener("click",function(e){
+
+if(!stampMode || e.target.tagName=="BUTTON") return;
+
+let s=document.createElement("div");
+s.className="stamp";
+s.innerHTML="<div>SHREE VAIBHAVLAXMI<br>ENTERPRISES<br><b>MUMBAI</b><br>NITIN C PATEL</div>";
+
+s.style.left=e.pageX-60+"px";
+s.style.top=e.pageY-60+"px";
+
+document.body.appendChild(s);
+
+let ox,oy;
+s.onmousedown=function(ev){
+ox=ev.offsetX;
+oy=ev.offsetY;
+document.onmousemove=function(m){
+s.style.left=m.pageX-ox+"px";
+s.style.top=m.pageY-oy+"px";
+}
+document.onmouseup=function(){
+document.onmousemove=null;
+}
+}
+});
+</script>
+                      </text>
                 </svg>
             </div>
 
