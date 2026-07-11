@@ -235,12 +235,59 @@
 
                     <div class="flex justify-between items-end mt-12 pt-4 px-4 text-center text-xs">
                         <div>
-                            <div class="w-24 h-24 mx-auto border-2 border-blue-400 border-dashed rounded-full flex items-center justify-center text-[10px] text-blue-500 font-bold uppercase rotate-12">
-                                <div class="text-circle-stamp">
-                                    <p class="text-in-circle-[8px]">SHREE VAIBHAVLAXMI</p>
-                                    <p class="border-y my-0.5 font-black">MUMBAI</p>
-                                    <p class="text-in-circle-[7px]">ENTERPRISES MUMBAI</p>
-                                </div>
+                            <div class="flex justify-between items-end mt-12 pt-4 px-4 text-center text-xs">
+    <div></div>
+
+    <div class="flex flex-col items-center">
+        <div id="official-seal-box" onclick="toggleStamp()" class="relative w-32 h-32 rounded-full border-[3px] border-blue-900 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 opacity-20 filter grayscale scale-95" style="color: #0b4596; border-color: #0b4596; font-family: 'Arial', sans-serif; transform: rotate(-8deg);">
+            
+            <div class="absolute inset-0 p-1">
+                <svg viewBox="0 0 100 100" class="w-full h-full ref-svg">
+                    <path id="curvePath" d="M 12,50 A 38,38 0 1,1 88,50" fill="none" />
+                    <text class="font-bold fill-[#0b4596]" style="font-size: 5.8px; letter-spacing: 0.6px;">
+                        <textPath href="#curvePath" startOffset="50%" text-anchor="middle">
+                            SHREE VAIBHAVLAXMI ENTERPRISES
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <div class="text-center z-10 mt-2">
+                <h2 class="text-xl font-black tracking-wider m-0 leading-none" style="font-size: 19px; color: #0b4596;">MUMBAI</h2>
+                <p class="font-bold tracking-widest uppercase m-0 mt-1" style="font-size: 7px; color: #0b4596;">OFFICIAL SEAL</p>
+            </div>
+
+            <div class="absolute bottom-4 flex justify-center gap-0.5 text-[#0b4596]" style="font-size: 9px;">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+        </div>
+        <p class="text-[9px] text-gray-400 mt-1 font-mono no-print">Click stamp to Apply/Remove</p>
+    </div>
+</div>
+
+<style>
+    /* Active State Class when clicked */
+    .stamp-active {
+        opacity: 1 !important;
+        filter: grayscale(0%) !important;
+        transform: rotate(-12deg) scale(1.05) !important;
+        text-shadow: 0.5px 0.5px 0px rgba(11, 69, 150, 0.2);
+    }
+    
+    /* Print media rule to hide guide text during PDF download */
+    @media print {
+        .no-print { display: none !important; }
+    }
+</style>
+
+<script>
+    // Click behavior to stamp or un-stamp
+    function toggleStamp() {
+        const stampBox = document.getElementById('official-seal-box');
+        stampBox.classList.toggle('stamp-active');
+    }
+</script>
+                        </div>
                             </div>
                             <p class="mt-2 text-gray-500 font-bold">Company Stamp</p>
                         </div>
