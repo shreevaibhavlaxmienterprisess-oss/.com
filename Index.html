@@ -233,46 +233,62 @@
                         <span id="invNet" class="text-lg">₹0</span>
                     </div>
 
-                    <div class="flex justify-between items-end mt-4 pt-1 px-1 text-center text-xs">
+                    <div class="flex justify-between items-end mt-2 pt-0.5 px-0.5 text-center text-xs">
                         <div>
-                            <div class="flex justify-between items-end mt-3 pt-1 px-1 text-center text-xs">
+                            <div class="flex justify-between items-end mt-1.5 pt-1 px-0.5 text-center text-xs">
     <div></div>
-                                <input type="file" id="stampImg" accept="image/*">
-<button onclick="stampMode=!stampMode">
-🖋 Stamp Mode
-</button>
+                                <div class="flex justify-between items-end mt-4 pt-1 px-1 text-center text-xs">
+    <div></div>
+
+    <div class="flex flex-col items-center">
+        <div id="official-seal-box" onclick="toggleStamp()" class="relative w-32 h-32 rounded-full border-[3px] border-blue-900 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 opacity-20 filter grayscale scale-95" style="color: #0b4596; border-color: #0b4596; font-family: 'Arial', sans-serif; transform: rotate(-8deg);">
+            
+            <div class="absolute inset-0 p-1">
+                <svg viewBox="0 0 100 100" class="w-full h-full ref-svg">
+                    <path id="curvePath" d="M 12,50 A 38,38 0 1,1 88,50" fill="none" />
+                    <text class="font-bold fill-[#0b4596]" style="font-size: 7.8px; letter-spacing: 2.6px;">
+                        <textPath href="#curvePath" startOffset="50%" text-anchor="middle">
+                            SHREE VAIBHAVLAXMI ENTERPRISES
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <div class="text-center z-10 mt-2">
+                <h2 class="text-xl font-black tracking-wider m-0 leading-none" style="font-size: 19px; color: #0b4596;">MUMBAI</h2>
+                <p class="font-bold tracking-widest uppercase m-0 mt-1" style="font-size: 11px; color: #0b4596;">NITIN C PATEL</p>
+            </div>
+
+            <div class="absolute bottom-4 flex justify-center gap-0.5 text-[#0b4596]" style="font-size: 9px;">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+        </div>
+        <p class="text-[9px] text-gray-400 mt-1 font-mono no-print">Click stamp to Apply/Remove</p>
+    </div>
+</div>
+
+<style>
+    /* Active State Class when clicked */
+    .stamp-active {
+        opacity: 1 !important;
+        filter: grayscale(0%) !important;
+        transform: rotate(-12deg) scale(1.05) !important;
+        text-shadow: 0.5px 0.5px 0px rgba(11, 69, 150, 0.2);
+    }
+    
+    /* Print media rule to hide guide text during PDF download */
+    @media print {
+        .no-print { display: none !important; }
+    }
+</style>
 
 <script>
-let stampMode=false;
-let stampURL="";
-
-document.getElementById("stampImg").onchange=e=>{
-    stampURL=URL.createObjectURL(e.target.files[0]);
-};
-
-document.addEventListener("click",function(e){
-
-    if(e.target.classList.contains("stamp")){
-        e.target.remove();
-        return;
+    // Click behavior to stamp or un-stamp
+    function toggleStamp() {
+        const stampBox = document.getElementById('official-seal-box');
+        stampBox.classList.toggle('stamp-active');
     }
-
-    if(!stampMode || !stampURL || e.target.tagName==="BUTTON" || e.target.id==="stampImg") return;
-
-    let img=document.createElement("img");
-    img.src=stampURL;
-    img.className="stamp";
-    img.style.cssText=`
-        position:absolute;
-        width:140px;
-        left:${e.pageX-70}px;
-        top:${e.pageY-70}px;
-        cursor:pointer;
-        z-index:9999;
-    `;
-    document.body.appendChild(img);
-});
-    </script>
+</script>
 
 
                       </text>
